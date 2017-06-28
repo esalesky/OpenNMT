@@ -35,21 +35,25 @@ Parameters:
   * `dropout_input` - if true, add a dropout layer on the first layer (useful for instance in complex encoders)
   * `dropout_type` - naive dropout applies independently of each connection, variational applies uniformally on all timesteps
 --]]
-function LSTM:__init(layers, inputSize, hiddenSize, dropout, residual, dropout_input, dropout_type)
+function LSTM:__init(layers, inputSize, hiddenSize, dropout, residual, dropout_input, dropout_type, numFilt)
   dropout = dropout or 0
+  _G.logger:info('inputSize: ' .. inputSize)
+  _G.logger:info('numFilt: ' .. numFilt)
+  newHiddenSize = inputSize*numFilt
 
   self.dropout = dropout
   self.numEffectiveLayers = 2 * layers
-  self.outputSize = hiddenSize
+  self.outputSize = newHiddenSize
+  _G.logger:info('new hidden: ' .. self.outputSize)
 
-  parent.__init(self, self:_buildModel(layers, inputSize, hiddenSize, dropout, residual, dropout_input, dropout_type))
+  parent.__init(self, self:_buildModel(layers, inputSize, newHiddenSize, dropout, residual, dropout_input, dropout_type, numFilt))
 end
 
 --[[ Stack the LSTM units. ]]
-function LSTM:_buildModel(layers, inputSize, hiddenSize, dropout, residual, dropout_input, dropout_type)
+function LSTM:_buildModel(layers, inputSize, hiddenSize, dropout, residual, dropout_input, dropout_type, numFilt)
   local inputs = {}
   local outputs = {}
-
+  _G.logger:info('new hidden size in bm: ' .. hiddenSize)
   for _ = 1, layers do
     table.insert(inputs, nn.Identity()()) -- c0: batchSize x hiddenSize
     table.insert(inputs, nn.Identity()()) -- h0: batchSize x hiddenSize
@@ -93,7 +97,7 @@ function LSTM:_buildModel(layers, inputSize, hiddenSize, dropout, residual, drop
       end
     end
 
-    nextC, nextH = self:_buildLayer(inputDim, hiddenSize)({prevC, prevH, input}):split(2)
+    nextC, nextH = self:_buildLayer(inputDim, hiddenSize, numFilt)({prevC, prevH, input}):split(2)
     prevInput = input
 
     table.insert(outputs, nextC)
@@ -104,7 +108,7 @@ function LSTM:_buildModel(layers, inputSize, hiddenSize, dropout, residual, drop
 end
 
 --[[ Build a single LSTM unit layer. ]]
-function LSTM:_buildLayer(inputSize, hiddenSize)
+function LSTM:_buildLayer(inputSize, hiddenSize, numFilt)
   local inputs = {}
   table.insert(inputs, nn.Identity()())
   table.insert(inputs, nn.Identity()())
@@ -115,6 +119,7 @@ function LSTM:_buildLayer(inputSize, hiddenSize)
   local x = inputs[3]
 
   -- Evaluate the input sums at once for efficiency.
+  _G.logger:info('In LSTM layer prep')
   local i2h = nn.Linear(inputSize, 4 * hiddenSize)(x)
   local h2h = nn.Linear(hiddenSize, 4 * hiddenSize)(prevH)
   local allInputSums = nn.CAddTable()({i2h, h2h})

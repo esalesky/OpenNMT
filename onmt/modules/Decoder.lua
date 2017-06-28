@@ -45,6 +45,8 @@ function Decoder:__init(args, inputNetwork, generator, attentionModel)
   local RNN = onmt.LSTM
   if args.rnn_type == 'GRU' then
     RNN = onmt.GRU
+  elseif args.rnn_type == 'ConvLSTM' then
+    RNN = onmt.ConvLSTM
   end
 
   -- Input feeding means the decoder takes an extra
@@ -52,17 +54,21 @@ function Decoder:__init(args, inputNetwork, generator, attentionModel)
   -- previous step.
   local inputSize = inputNetwork.inputSize
   if args.input_feed then
+--    inputSize = inputSize + args.rnn_size
+    _G.logger:info('input feeding on')
     inputSize = inputSize + args.rnn_size
   end
 
+  local numFilt = 8
   local rnn = RNN.new(args.layers, inputSize, args.rnn_size,
-                      args.dropout, args.residual, args.dropout_input, args.dropout_type)
+                      args.dropout, args.residual, args.dropout_input, args.dropout_type, numFilt)
 
   self.rnn = rnn
   self.inputNet = inputNetwork
 
   self.args = args
   self.args.rnnSize = self.rnn.outputSize
+  _G.logger:info('self.args.rnnSize dec: '.. self.args.rnnSize)
   self.args.numEffectiveLayers = self.rnn.numEffectiveLayers
 
   self.args.inputIndex = {}
@@ -310,6 +316,9 @@ Returns:
  2. `states` - All states.
 --]]
 function Decoder:forwardOne(input, prevStates, context, prevOut, t, sourceSizes, sourceLength)
+  _G.logger:info('context (enc out) size: '.. context:size(1))
+  _G.logger:info('context (enc out) size: '.. context:size(2))
+  _G.logger:info('context (enc out) size: '.. context:size(3))
   if sourceSizes then
     -- If the encoder reduced the time dimension, resize the padding mask accordingly.
     if sourceLength ~= context:size(2) then
@@ -446,6 +455,7 @@ function Decoder:backward(batch, outputs, criterion)
                                                               { batch.size, self.args.rnnSize })
   end
 
+  _G.logger:info('self.args.rnnSize decoder bkwd: '.. self.args.rnnSize)
   local gradStatesInput = onmt.utils.Tensor.reuseTensorTable(self.gradOutputsProto,
                                                              { batch.size, self.args.rnnSize })
   local gradContextInput

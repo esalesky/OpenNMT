@@ -48,6 +48,7 @@ build = {
     ["onmt.modules.NoAttention"] = "onmt/modules/NoAttention.lua",
     ["onmt.modules.GlobalAttention"] = "onmt/modules/GlobalAttention.lua",
     ["onmt.modules.LSTM"] = "onmt/modules/LSTM.lua",
+    ["onmt.modules.ConvLSTM"] = "onmt/modules/ConvLSTM.lua",
     ["onmt.modules.GRU"] = "onmt/modules/GRU.lua",
     ["onmt.modules.VariationalDropout"] = "onmt/modules/VariationalDropout.lua",
     ["onmt.modules.MaskedSoftmax"] = "onmt/modules/MaskedSoftmax.lua",

@@ -36,7 +36,7 @@ local options = {
     '-rnn_type', 'LSTM',
     [[Type of recurrent cell.]],
     {
-      enum = {'LSTM', 'GRU'},
+      enum = {'LSTM', 'GRU', 'ConvLSTM'},
       structural = 0
     }
   },
@@ -95,15 +95,19 @@ function Encoder:__init(args, inputNetwork)
   local RNN = onmt.LSTM
   if args.rnn_type == 'GRU' then
     RNN = onmt.GRU
+  elseif args.rnn_type == 'ConvLSTM' then
+    RNN = onmt.ConvLSTM
   end
 
-  local rnn = RNN.new(args.layers, inputNetwork.inputSize, args.rnn_size, args.dropout, args.residual, args.dropout_input, args.dropout_type)
+  local numFilt = 8
+  local rnn = RNN.new(args.layers, inputNetwork.inputSize, args.rnn_size, args.dropout, args.residual, args.dropout_input, args.dropout_type, numFilt)
 
   self.rnn = rnn
   self.inputNet = inputNetwork
 
   self.args = {}
   self.args.rnnSize = self.rnn.outputSize
+  _G.logger:info('self.args.rnnSize: '.. self.args.rnnSize)
   self.args.numEffectiveLayers = self.rnn.numEffectiveLayers
 
   parent.__init(self, self:_buildModel())

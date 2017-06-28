@@ -124,6 +124,9 @@ function Seq2Seq:__init(args, dicts)
   decArgs.layers = decArgs.dec_layers > 0 and decArgs.dec_layers or decArgs.layers
   self.models.decoder = onmt.Factory.buildWordDecoder(decArgs, dicts.tgt)
 
+  _G.logger:info('s2s enc rnn_size: ' .. encArgs.rnn_size)
+  _G.logger:info('s2s dec rnn_size: ' .. decArgs.rnn_size)
+
   self.models.bridge = onmt.Bridge(args.bridge,
                                    encArgs.rnn_size,
                                    self.models.encoder.args.numEffectiveLayers,
