@@ -12,6 +12,12 @@ torch.class('onmt.FeaturesGenerator', 'onmt.Generator')
 
 function Generator:__init(opt, sizes)
   parent.__init(self)
+  _G.logger:info('generator rnn_type: '.. opt.rnn_type)
+--  for key,value in pairs(opt) do print(key,value) end
+  if opt.rnn_type == 'ConvLSTM' then
+     opt.rnn_size = opt.src_word_vec_size[1] * 8 -- obviously change this
+  end
+  _G.logger:info('generator rnn_size: '.. opt.rnn_size)
   self:_buildGenerator(opt, sizes)
   -- for backward compatibility with previous model
   self.version = 2

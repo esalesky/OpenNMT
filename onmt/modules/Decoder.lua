@@ -43,10 +43,12 @@ Parameters:
 --]]
 function Decoder:__init(args, inputNetwork, generator, attentionModel)
   local RNN = onmt.LSTM
+  local numFilt = 8
   if args.rnn_type == 'GRU' then
     RNN = onmt.GRU
   elseif args.rnn_type == 'ConvLSTM' then
     RNN = onmt.ConvLSTM
+    args.rnn_size = inputNetwork.inputSize * numFilt
   end
 
   -- Input feeding means the decoder takes an extra

@@ -93,13 +93,16 @@ Parameters:
 ]]
 function Encoder:__init(args, inputNetwork)
   local RNN = onmt.LSTM
+  local numFilt = 8
   if args.rnn_type == 'GRU' then
     RNN = onmt.GRU
   elseif args.rnn_type == 'ConvLSTM' then
     RNN = onmt.ConvLSTM
+    args.rnn_size = inputNetwork.inputSize * numFilt
   end
+  _G.logger:info('enc reset args.rnn_size: '.. args.rnn_size)
+  _G.logger:info('numFilt: '..numFilt)
 
-  local numFilt = 8
   local rnn = RNN.new(args.layers, inputNetwork.inputSize, args.rnn_size, args.dropout, args.residual, args.dropout_input, args.dropout_type, numFilt)
 
   self.rnn = rnn
